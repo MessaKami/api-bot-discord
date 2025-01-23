@@ -8,8 +8,9 @@ RUN npm ci --only=production
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Installation de NestJS CLI
-RUN npm i -g @nestjs/cli
+# Installation des dépendances de build
+RUN npm i -g @nestjs/cli && \
+    npm i -D @types/node
 
 COPY src/package*.json ./
 COPY --from=deps /app/node_modules ./node_modules
