@@ -7,6 +7,10 @@ RUN npm ci --only=production
 # Stage 2: Builder
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Installation de NestJS CLI
+RUN npm i -g @nestjs/cli
+
 COPY src/package*.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY src/. .
@@ -29,8 +33,8 @@ COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/package.json ./package.json
 
 # Configuration des variables d'environnement
-ENV NODE_ENV production
-ENV PORT 3000
+ENV NODE_ENV=production
+ENV PORT=3000
 
 # Exposition du port
 EXPOSE $PORT
