@@ -24,7 +24,8 @@ jobs:
       - name: Build et Push de l'image
         uses: docker/build-push-action@v5
         with:
-          context: ./src
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/api-bot-discord:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/api-bot-discord:latest
