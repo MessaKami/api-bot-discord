@@ -10,6 +10,8 @@ export default new DataSource({
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
   entities: [User],
-  synchronize: true, // Active la synchronisation automatique en développement
+  synchronize: process.env.NODE_ENV !== 'production', // Désactivé en production
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+  migrationsRun: true, // Exécute les migrations au démarrage
   logging: true,
 }); 
