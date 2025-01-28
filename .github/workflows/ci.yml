@@ -44,7 +44,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.prod.yml,src/nginx/"
+          source: "docker-compose.prod.yml,src/nginx/,.env.production"
           target: "/var/www/api-bot-discord"
           strip_components: 0
 
@@ -82,23 +82,8 @@ jobs:
 
             cd /var/www/api-bot-discord
             
-            # Création ou mise à jour du fichier .env
-            cat > .env << EOL
-            # PostgreSQL
-            POSTGRES_HOST=$POSTGRES_HOST
-            POSTGRES_PORT=$POSTGRES_PORT
-            POSTGRES_USER=$POSTGRES_USER
-            POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-            POSTGRES_DB=$POSTGRES_DB
-
-            # Redis
-            REDIS_HOST=$REDIS_HOST
-            REDIS_PORT=$REDIS_PORT
-
-            # API
-            NODE_ENV=production
-            PORT=3000
-            EOL
+            # Copie du fichier .env.production vers .env
+            cp .env.production .env
 
             # Pull des nouvelles images
             docker compose -f docker-compose.prod.yml pull
