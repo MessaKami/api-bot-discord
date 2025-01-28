@@ -20,6 +20,8 @@ import { User } from './users/entities/user.entity';
         password: configService.get('POSTGRES_PASSWORD') || 'admin',
         database: configService.get('POSTGRES_DB') || 'api_dev',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        migrations: [__dirname + '/migrations/*{.ts,.js}'],
+        migrationsRun: true,
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
       }),
