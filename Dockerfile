@@ -34,6 +34,7 @@ COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nestjs:nodejs /app/views ./views
 COPY --from=builder --chown=nestjs:nodejs /app/public ./public
+COPY --from=builder --chown=nestjs:nodejs /app/src/migrations ./dist/migrations
 
 # Configuration des variables d'environnement
 ENV NODE_ENV=production
