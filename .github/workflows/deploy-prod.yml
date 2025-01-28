@@ -39,12 +39,23 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
+      - name: Création du répertoire sur le VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: 45.81.84.133
+          port: 9033
+          username: adminlocal
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo mkdir -p /var/www/api-bot-discord
+            sudo chown -R adminlocal:adminlocal /var/www/api-bot-discord
+
       - name: Copie des fichiers de configuration
         uses: appleboy/scp-action@master
         with:
           host: 45.81.84.133
           port: 9033
-          username: ${{ secrets.PROD_USER }}
+          username: adminlocal
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker-compose.prod.yml,src/nginx/,.env.production"
           target: "/var/www/api-bot-discord"
@@ -63,26 +74,24 @@ jobs:
         with:
           host: 45.81.84.133
           port: 9033
-          username: ${{ secrets.PROD_USER }}
+          username: adminlocal
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Création du répertoire si nécessaire
-            mkdir -p /var/www/api-bot-discord
             cd /var/www/api-bot-discord
 
             # Copie du fichier .env.production vers .env
             cp .env.production .env
 
             # Pull des nouvelles images
-            docker compose -f docker-compose.prod.yml pull
+            sudo docker compose -f docker-compose.prod.yml pull
 
             # Redémarrage des services
-            docker compose -f docker-compose.prod.yml down
-            docker compose -f docker-compose.prod.yml up -d
+            sudo docker compose -f docker-compose.prod.yml down
+            sudo docker compose -f docker-compose.prod.yml up -d
 
             # Nettoyage des images non utilisées
-            docker image prune -f
+            sudo docker image prune -f
 
             # Vérification du déploiement
             echo "Vérification des services..."
-            docker compose -f docker-compose.prod.yml ps 
+            sudo docker compose -f docker-compose.prod.yml ps 
