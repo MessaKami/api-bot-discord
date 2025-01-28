@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   api:
-    image: messakami/api-bot-discord:latest
+    image: messakami/api-bot-discord:production
     environment:
       - NODE_ENV=production
       - PORT=${PORT}
@@ -55,8 +55,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:8080"
-      - "8080:8080"
+      - "9013:8080"
+      - "9113:443"
     volumes:
       - ./src/nginx/conf.d:/etc/nginx/conf.d
       - ./src/nginx/logs:/var/log/nginx
