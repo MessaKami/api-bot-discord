@@ -1,20 +1,10 @@
-version: '3.8'
-
 services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:3000"
-      - "9229:9229"
-    volumes:
-      - ./src/src:/app/src
-      - ./src/views:/app/views
-      - ./src/public:/app/public
-      - /app/node_modules
+      dockerfile: Dockerfile
     environment:
-      - NODE_ENV=${NODE_ENV}
+      - NODE_ENV=production
       - PORT=${PORT}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
@@ -34,13 +24,10 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    ports:
-      - "${POSTGRES_PORT}:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PORT=${POSTGRES_PORT}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -54,8 +41,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -70,7 +55,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:8080"
+      - "80:8080"
     volumes:
       - ./src/nginx/conf.d:/etc/nginx/conf.d
       - ./src/nginx/logs:/var/log/nginx

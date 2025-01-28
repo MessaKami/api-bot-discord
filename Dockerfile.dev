@@ -1,7 +1,7 @@
 # Image de base avec Node.js
 FROM node:20-alpine
 
-# Installation des dépendances système nécessaires pour le développement
+# Installation des dépendances système nécessaires
 RUN apk add --no-cache \
     tini \
     git \
@@ -12,32 +12,37 @@ RUN apk add --no-cache \
 # Création du répertoire de travail
 WORKDIR /app
 
-# Installation globale de nest CLI pour le développement
+# Installation de NestJS CLI
 RUN npm i -g @nestjs/cli
 
-# Création d'un utilisateur non-root pour le développement
+# Création d'un utilisateur non-root
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001 && \
+    adduser -S nestjs -u 1001
+
+# Création des dossiers nécessaires
+RUN mkdir -p views public && \
     chown -R nestjs:nodejs /app
+
+# Copie des fichiers de configuration
+COPY --chown=nestjs:nodejs src/package*.json \
+     src/tsconfig*.json \
+     ./
+
+# Installation des dépendances
+RUN npm install
 
 # Passage à l'utilisateur non-root
 USER nestjs
 
-# Copie des fichiers de dépendances
-COPY --chown=nestjs:nodejs src/package*.json ./
-
-# Installation de toutes les dépendances (incluant devDependencies)
-RUN npm install
-
 # Configuration des variables d'environnement
-ENV NODE_ENV development
-ENV PORT 3000
+ENV NODE_ENV=development
+ENV PORT=3000
 
-# Exposition du port
-EXPOSE $PORT 9229
+# Exposition des ports
+EXPOSE 3000 9229
 
 # Utilisation de Tini comme init
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Commande par défaut pour le développement avec hot-reload et debugger
+# Commande de démarrage en mode développement
 CMD ["npm", "run", "start:dev"] 
