@@ -39,17 +39,6 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Création du répertoire sur le VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: 45.81.84.133
-          port: 9033
-          username: adminlocal
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            sudo mkdir -p /var/www/api-bot-discord
-            sudo chown -R adminlocal:adminlocal /var/www/api-bot-discord
-
       - name: Copie des fichiers de configuration
         uses: appleboy/scp-action@master
         with:
@@ -57,7 +46,7 @@ jobs:
           port: 9033
           username: adminlocal
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.prod.yml,src/nginx/,.env.production"
+          source: "docker-compose.prod.yml,src/nginx/"
           target: "/var/www/api-bot-discord"
           strip_components: 0
 
@@ -76,22 +65,62 @@ jobs:
           port: 9033
           username: adminlocal
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: POSTGRES_HOST,POSTGRES_PORT,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,REDIS_HOST,REDIS_PORT
           script: |
-            cd /var/www/api-bot-discord
+            # Vérification des prérequis
+            if ! command -v docker &> /dev/null; then
+                echo "Docker n'est pas installé. Installation..."
+                curl -fsSL https://get.docker.com -o get-docker.sh
+                sudo sh get-docker.sh
+            fi
 
-            # Copie du fichier .env.production vers .env
-            cp .env.production .env
+            if ! command -v docker-compose &> /dev/null; then
+                echo "Docker Compose n'est pas installé. Installation..."
+                sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                sudo chmod +x /usr/local/bin/docker-compose
+            fi
+
+            # Création du répertoire si nécessaire
+            sudo mkdir -p /var/www/api-bot-discord
+            sudo chown -R adminlocal:adminlocal /var/www/api-bot-discord
+
+            cd /var/www/api-bot-discord
+            
+            # Création ou mise à jour du fichier .env
+            cat > .env << EOL
+            # PostgreSQL
+            POSTGRES_HOST=$POSTGRES_HOST
+            POSTGRES_PORT=$POSTGRES_PORT
+            POSTGRES_USER=$POSTGRES_USER
+            POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+            POSTGRES_DB=$POSTGRES_DB
+
+            # Redis
+            REDIS_HOST=$REDIS_HOST
+            REDIS_PORT=$REDIS_PORT
+
+            # API
+            NODE_ENV=production
+            PORT=3000
+            EOL
 
             # Pull des nouvelles images
-            sudo docker compose -f docker-compose.prod.yml pull
+            sudo docker-compose -f docker-compose.prod.yml pull
 
             # Redémarrage des services
-            sudo docker compose -f docker-compose.prod.yml down
-            sudo docker compose -f docker-compose.prod.yml up -d
+            sudo docker-compose -f docker-compose.prod.yml down
+            sudo docker-compose -f docker-compose.prod.yml up -d
 
             # Nettoyage des images non utilisées
-            sudo docker image prune -f
+            sudo docker image prune -f -a
 
             # Vérification du déploiement
             echo "Vérification des services..."
-            sudo docker compose -f docker-compose.prod.yml ps 
+            sudo docker-compose -f docker-compose.prod.yml ps
+            
+            # Affichage des logs en cas d'erreur
+            if [ $? -ne 0 ]; then
+                echo "Erreur détectée. Affichage des logs..."
+                sudo docker-compose -f docker-compose.prod.yml logs
+                exit 1
+            fi 
